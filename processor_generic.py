@@ -14,34 +14,38 @@ Hint:
   - don't need to write prepare() and detect() in child classes, write them in parent class (this one)
 """
 
-class ProcessorGeneric:
-  def __init__(self, imagepath: str) -> None:
-    pass
-  
-  def _readImage(self) -> None:
-    pass
 
-  def _filterImage(self) -> None:
-    pass
-  
-  def _threshImage(self) -> None:
-    pass
-  
-  def _filterThreshold(self) -> None:
-    pass
-  
-  def prepare(self) -> None:
-    self._readImage()
-    self._filterImage()
-    self._threshImage()
-    self._filterThreshold()
-  
-  def detect(self, func=NotImplemented) -> None:
-    func()
-  
-  def __do_nothing(self) -> None:
-    pass
-  
-  def test(self):
-    self.prepare()
-    self.detect(func=self.__do_nothing)
+class ProcessorGeneric:
+    def __init__(self, imagepath: str) -> None:
+        pass
+
+    def _readImage(self) -> None:
+        # TODO: maybe
+        pass
+
+    def _filterImage(self) -> None:
+        pass
+
+    def _threshImage(self) -> None:
+        pass
+
+    def _filterThreshold(self) -> None:
+        pass
+
+    def prepare(self) -> None:
+        # TODO
+        self._readImage()
+        self._filterImage()
+        self._threshImage()
+        self._filterThreshold()
+
+    def detect(self, func=NotImplemented) -> None:
+        # TODO
+        func()
+
+    def __do_nothing(self) -> None:
+        pass
+
+    def test(self):
+        self.prepare()
+        self.detect(func=self.__do_nothing)

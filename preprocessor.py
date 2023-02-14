@@ -1,29 +1,18 @@
 import os
+
 import cv2
+import pytesseract
+
 import numpy as np
 
+from processor_generic import ProcessorGeneric
 
-class Preprocessor:
-    def __init__(self, imagepath: str) -> None:
-        if os.path.exists(imagepath):
-            self._imagepath = os.path.abspath(imagepath)
-        else:
-            raise RuntimeError("Error: image does not exist.")
 
-    def _readImage(self) -> None:
-        """Read image from file"""
-        try:
-            self._img = cv2.imread(self._imagepath)
-            self._imgray = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
-        except Exception as e:
-            print("Image file is invalid: {}".format(e))
+class Preprocessor(ProcessorGeneric):
+    def __init__(self, imgpath: str):
+        super().__init__(imgpath)
 
-    def _filterImage(self) -> None:
-        """To clean noise"""
-        kernel = np.ones((7, 7), np.float32) / 25
-        self._imgray = cv2.filter2D(self._imgray, -1, kernel)
-
-    def _thresholdImage(self) -> None:
+    def threshold_image(self) -> None:
         # TODO: Update smart parameter choosing.
         # ret, thresh = cv2.threshold(self._imgray,50,255,0)
         thresh = cv2.adaptiveThreshold(
@@ -32,15 +21,15 @@ class Preprocessor:
         # self._th_ret = ret #TODO: Delete?
         self._th_thresh = thresh
 
-    def _morphImage(self) -> None:
+    def morph_image(self) -> None:
         pass
 
     def preprocess(self) -> None:
         """Pipeline"""
-        self._readImage()
-        self._filterImage()
-        self._thresholdImage()
-        self._morphImage()
+        self.read_image()
+        self.filter_image()
+        self.threshold_image()
+        self.morph_image()
 
     def detect_rectangle(self) -> list:  # list of tuples
         # TODO auto choose value of parameter
@@ -64,10 +53,9 @@ class Preprocessor:
         for rect in self.detect_rectangle():
             x, y, w, h = rect
             img2 = cv2.rectangle(img2, (x, y), (x + h, y + h), (255, 0, 0), 2)
-
         cv2.imwrite("rectangles.png", img2)
 
 
 if __name__ == "__main__":
-    p = Preprocessor("data/test3.jpg")
+    p = Preprocessor("data/1_klee.jpeg")
     p.test()

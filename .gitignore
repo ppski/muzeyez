@@ -1,1 +1,5 @@
 muzenv/*
+__pycache__/*
+tesseract-5.3.0/*
+rectangles.png
+threshold.png

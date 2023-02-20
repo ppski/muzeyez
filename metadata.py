@@ -1,56 +1,75 @@
 import os
-import subprocess
+import requests
 
-import hachoir
+from exif import Image
+from typing import Dict, Any, Union
 
-from PIL import Image, ExifTags
-from PIL.TiffTags import TAGS
-
-# from PIL.ExifTags import TAGS
+JSONDict = Dict[str, Any]
 
 
-def get_meta(picture):
-    with Image.open(picture) as img:
-        print(img.tag.keys())
-        meta_dict = {TAGS[key]: img.tag[key] for key in img.tag.keys()}
+class ImageData:
+    def __init__(self, imgpath: str) -> None:
+        self._imgpath = os.path.abspath(imgpath)
+        self.has_data = False
 
-    return meta_dict
+    def read_image(self) -> None:
+        """Read image from file"""
+        try:
+            with open(self._imgpath, "rb") as rb_img:
+                self.img_file = Image(rb_img)
+                if self.img_file.has_exif:
+                    self.has_data = True
+        except Exception as e:
+            print("Image file is invalid: {}".format(e))
 
+    def dms_coordinates_to_dd_coordinates(self, geo_dir: str):
+        # https://auth0.com/blog/read-edit-exif-metadata-in-photos-with-python/
 
-# https://www.awaresystems.be/imaging/tiff/tifftags/privateifd/exif.html
+        if geo_dir == "lat":
+            coordinates = self.img_file.get("gps_latitude")
+            coordinates_ref = self.img_file.get("gps_latitude_ref")
+        else:
+            coordinates = self.img_file.get("gps_longitude")
+            coordinates_ref = self.img_file.get("gps_longitude_ref")
 
-for f in os.listdir("data"):
-    if not f.endswith(("ff", "jpeg")):
-        print("Ignore")
-        continue
-    image_path = f"data/{f}"
-    image = Image.open(image_path)
-    if f.endswith("ff"):
-        d = get_meta(image_path)
-        print(d)
-        exif_data = image.getexif()
-        # iterating over all EXIF data fields
-        exif_data = {
-            ExifTags.TAGS[k]: v
-            for k, v in image.getexif().items()
-            if k in ExifTags.TAGS
-        }
-        exif_data = image._getexif()
+        decimal_degrees = coordinates[0] + coordinates[1] / 60 + coordinates[2] / 3600
 
-    elif f.endswith("jpeg"):
+        if coordinates_ref == "S" or coordinates_ref == "W":
+            decimal_degrees = -decimal_degrees
 
-        exeProcess = "hachoir-metadata"
-        process = subprocess.Popen(
-            [exeProcess, image_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
+        return decimal_degrees
+
+    def get_geo(self) -> Union[JSONDict, None]:
+
+        if not self.img_file.get("gps_latitude", None):
+            return None
+
+        lat_dd = self.dms_coordinates_to_dd_coordinates("lat")
+        lon_dd = self.dms_coordinates_to_dd_coordinates("lon")
+
+        query = {"lat": lat_dd, "lon": lon_dd, "format": "json"}
+        response = requests.get(
+            "https://nominatim.openstreetmap.org/reverse?", params=query
         )
+        return response.json()
 
-        infoDict = {}
-        for tag in process.stdout:
-            line = tag.strip().split(":")
-            infoDict[line[0].strip()] = line[-1].strip()
+    def get_datetime(self) -> str:
+        dt = self.img_file.datetime_original
+        return dt
 
-        for k, v in infoDict.items():
-            t = print(k, ":", v)
+    def prepare(self) -> None:
+        self.read_image()
+        if self.has_data:
+            t = self.get_datetime()
+            print("Time:", t)
+            g = self.get_geo()
+            print("Geo:", g)
+        else:
+            print("No data")
+
+
+if __name__ == "__main__":
+
+    x_jpeg = "data/1_dix.jpeg"
+    proc = ImageData(x_jpeg)
+    print(proc.prepare())

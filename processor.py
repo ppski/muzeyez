@@ -1,74 +1,31 @@
-import os, cv2
+import os
+
+import cv2
 import pytesseract
 
+import numpy as np
 
-class PlateProcessor:
-    def __init__(self, imgpath: str) -> None:
-        self._recognized = []
-        if os.path.exists(imgpath):
-            self._imgpath = os.path.abspath(imgpath)
-            try:
-                # set tessract environment
-                self._setTessEnv()
-                self._setLang()
-            except Exception as e:
-                print("Exception while reading image: {}".format(e))
-                exit(1)
-            except RuntimeError as e:
-                print("RuntimeError while reading image: {}".format(e))
-                exit(1)
-            except pytesseract.TesseractError as e:
-                print("Error while setting tesseract: {}".format(e))
-                exit(1)
-        else:
-            raise Exception("Error: image path does not exist!")
+from processor_generic import ProcessorGeneric
 
-    def _setTessEnv(self) -> None:
-        self._tessdata_dir_config = "--tessdata-dir " + os.getcwd() + "/tessdata"
-        self._tessdata_bin = os.getcwd() + "/tesseract-5.3.0/build/bin/tesseract"
-        pytesseract.pytesseract.tesseract_cmd = self._tessdata_bin
-        os.environ["TESSDATA_PREFIX"] = os.getcwd() + "/tessdata"
 
-    def _setLang(self) -> None:
-        # TODO auto detect language
-        self._lang = "eng"
+class PlateProcessor(ProcessorGeneric):
+    def __init__(self, imgpath: str):
+        super().__init__(imgpath)
 
-    def _readImg(self) -> None:
-        try:
-            # read image and convert to gray image
-            self._img = cv2.imread(self._imgpath)
-            self._imgray = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
-        except Exception as e:
-            print("Image file is invalid: {}".format(e))
+    def preprocess(self) -> None:
+        self.read_image()
+        self.filter_image()
+        self.threshold_image()
+        self.filter_threshold()
+        self.dilate_threshold_image()
 
-    def _filterImg(self) -> None:
-        pass
-
-    def _thresholdImage(self) -> None:
-        # get thresholded image
-        ret, thresh = cv2.threshold(
-            self._imgray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV
-        )
-        self._ret = ret
-        self._thresh = thresh
-
-    def _filterThreshold(self) -> None:
-        pass
-
-    def _dilateThresholdedImage(self) -> None:
+    def dilate_threshold_image(self) -> None:
         # Specify structure shape and kernel size
         # TODO auto selection of kernel size
         kernel_size = 10
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
 
         self._img2detect = cv2.dilate(self._thresh, kernel, iterations=1)
-
-    def preprocess(self) -> None:
-        self._readImg()
-        self._filterImg()
-        self._thresholdImage()
-        self._filterThreshold()
-        self._dilateThresholdedImage()
 
     def image2text(self) -> None:
         img2 = self._img.copy()
@@ -105,7 +62,9 @@ class PlateProcessor:
 
 
 if __name__ == "__main__":
-    proc = PlateProcessor("data/test4.jpg")
+    path = os.path.abspath(".")
+    test_image = f"data/1_klee.jpeg"
+    proc = PlateProcessor(test_image)
     proc.preprocess()
     proc.image2text()
     print(proc.getRecognizedList())

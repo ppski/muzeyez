@@ -1,6 +1,6 @@
 #!/bin/bash
-apt update
-apt upgrade
+apt update -y
+apt upgrade -y
 
 apt install -y build-essential
 apt install -y python3 python-is-python3

@@ -1,1 +1,11 @@
 muzenv/*
+__pycache__/*
+tesseract-5.3.0/*
+scraps/*
+rectangles.png
+threshold.png
+.DS_Store
+.swp
+data/1_dix.jpeg
+data/1_miro.HEIC
+data/muzeyes - 1 of 1.HEIC

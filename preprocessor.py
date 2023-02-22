@@ -21,16 +21,6 @@ class Preprocessor(ProcessorGeneric):
         # self._th_ret = ret #TODO: Delete?
         self._th_thresh = thresh
 
-    def morph_image(self) -> None:
-        pass
-
-    def preprocess(self) -> None:
-        """Pipeline"""
-        self.read_image()
-        self.filter_image()
-        self.threshold_image()
-        self.morph_image()
-
     def detect_rectangle(self) -> list:  # list of tuples
         # TODO auto choose value of parameter
         contours, hierarchy = cv2.findContours(self._th_thresh, 1, 2)
@@ -47,7 +37,7 @@ class Preprocessor(ProcessorGeneric):
         return result
 
     def test(self):
-        self.preprocess()
+        self.prepare()
         cv2.imwrite("threshold.png", self._th_thresh)
         img2 = self._img
         for rect in self.detect_rectangle():

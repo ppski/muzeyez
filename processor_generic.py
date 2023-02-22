@@ -5,20 +5,6 @@ import pytesseract
 
 import numpy as np
 
-"""
-Task:
-  - DONE: Implement generic class for image processor
-  - Refactor PlateProcessor and PreProcessor classes with this new generic class
-
-Hint:
-  - the process flow is generic: 
-      init -> read image -> filter image -> threshold image -> filter thresholded image -> detect
-              ----------------------------  prepare ---------------------------       --- run ---
-  
-  - some methods can be generic too, e.g. readImage
-  - don't need to write prepare() and detect() in child classes, write them in parent class (this one)
-"""
-
 
 class ProcessorGeneric:
     def __init__(self, imgpath: str) -> None:
@@ -42,11 +28,11 @@ class ProcessorGeneric:
             raise Exception("Error: image path does not exist!")
 
     def _set_lang(self) -> None:
-        # TODO auto detect language
         self._lang = "eng"
 
     def _set_tess_env(self) -> None:
         self._tessdata_dir_config = "--tessdata-dir " + os.getcwd() + "/tessdata"
+        print(self._tessdata_dir_config)
         self._tessdata_bin = os.getcwd() + "/tesseract-5.3.0/build/bin/tesseract"
         pytesseract.pytesseract.tesseract_cmd = self._tessdata_bin
         os.environ["TESSDATA_PREFIX"] = os.getcwd() + "/tessdata"
@@ -76,15 +62,16 @@ class ProcessorGeneric:
         pass
 
     def prepare(self) -> None:
-        # TODO
         self.read_image()
         self.filter_image()
         self.threshold_image()
         self.filter_threshold()
 
     def detect(self, func=NotImplemented) -> None:
-        # TODO
         func()
+
+    def __do_nothing(self) -> None:
+        pass
 
     def test(self):
         self.prepare()

@@ -12,19 +12,11 @@ class PlateProcessor(ProcessorGeneric):
     def __init__(self, imgpath: str):
         super().__init__(imgpath)
 
-    def preprocess(self) -> None:
-        self.read_image()
-        self.filter_image()
-        self.threshold_image()
-        self.filter_threshold()
-        self.dilate_threshold_image()
-
     def dilate_threshold_image(self) -> None:
         # Specify structure shape and kernel size
         # TODO auto selection of kernel size
         kernel_size = 10
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
-
         self._img2detect = cv2.dilate(self._thresh, kernel, iterations=1)
 
     def image2text(self) -> None:
@@ -57,7 +49,7 @@ class PlateProcessor(ProcessorGeneric):
             )
             self._recognized.append(result_txt)
 
-    def getRecognizedList(self) -> list:
+    def get_recognized_list(self) -> list:
         return self._recognized
 
 
@@ -65,6 +57,7 @@ if __name__ == "__main__":
     path = os.path.abspath(".")
     test_image = f"data/1_klee.jpeg"
     proc = PlateProcessor(test_image)
-    proc.preprocess()
+    proc.prepare()
+    proc.dilate_threshold_image()
     proc.image2text()
     print(proc.getRecognizedList())
